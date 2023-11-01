@@ -1,60 +1,17 @@
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-mongoose.connect("mongodb://127.0.0.1:27017/compileradb", { useNewUrlParser: true }, (err) => {
-  if (err) {
-    console.error("Error connecting to MongoDB:", err);
-  } else {
-    console.log("Successfully connected to MongoDB: compilerdb");
-  }
-});
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
 
-const { generateFile } = require("./generateFile");
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
 
-const { addJobToQueue } = require("./jobQueue");
-const Job = require("./models/Job");
-
-const app = express();
-
-app.use(cors());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-app.post("/run", async (req, res) => {
-  const { language = "cpp", code } = req.body;
-
-  console.log(language, "Length:", code.length);
-
-  if (code === undefined) {
-    return res.status(400).json({ success: false, error: "Empty code body!" });
-  }
-  // need to generate a c++ file with content from the request
-  const filepath = await generateFile(language, code);
-  // write into DB
-  const job = await new Job({ language, filepath }).save();
-  const jobId = job["_id"];
-  addJobToQueue(jobId);
-  res.status(201).json({ jobId });
-});
-
-app.get("/status", async (req, res) => {
-  const jobId = req.query.id;
-
-  if (jobId === undefined) {
-    return res
-      .status(400)
-      .json({ success: false, error: "missing id query param" });
-  }
-
-  const job = await Job.findById(jobId);
-
-  if (job === undefined) {
-    return res.status(400).json({ success: false, error: "couldn't find job" });
-  }
-
-  return res.status(200).json({ success: true, job });
-});
-
-app.listen(8000, () => {
-  console.log(`Listening on port 8000!`);
-});
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
